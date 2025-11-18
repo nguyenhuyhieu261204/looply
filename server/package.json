@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "author": {
     "name": "Nguyễn Huy Hiếu",
-    "email": "hieu26.nh@gamail.com"
+    "email": "hieu26.nh@gmail.com"
   },
   "imports": {
     "#config": "./src/config/index.js",

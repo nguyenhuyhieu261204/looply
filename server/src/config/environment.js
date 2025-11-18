@@ -7,6 +7,7 @@ const schema = z.object({
   APP_NAME: z.string().default("looply"),
   NODE_ENV: z.string().default("development"),
   PORT: z.string().default("8000"),
+  FRONTEND_URL: z.string().url().optional().default("http://localhost:3000"),
 });
 
 const result = schema.safeParse(process.env);
