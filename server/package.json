@@ -1,0 +1,43 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "author": {
+    "name": "Nguyễn Huy Hiếu",
+    "email": "hieu26.nh@gamail.com"
+  },
+  "imports": {
+    "#config": "./src/config/index.js",
+    "#config/*": "./src/config/*.js",
+    "#controllers": "./src/controllers/index.js",
+    "#controllers/*": "./src/controllers/*.js",
+    "#db": "./src/db/index.js",
+    "#db/*": "./src/db/*.js",
+    "#models": "./src/models/index.js",
+    "#models/*": "./src/models/*.js",
+    "#routes": "./src/routes/index.js",
+    "#routes/*": "./src/routes/*.js",
+    "#services": "./src/services/index.js",
+    "#services/*": "./src/services/*.js",
+    "#utils": "./src/utils/index.js",
+    "#utils/*": "./src/utils/*.js"
+  },
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "http-status": "^2.1.0",
+    "morgan": "^1.10.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
