@@ -189,6 +189,7 @@ verify_push() {
 main() {
     log_info "Starting Docker build & push process for backend and frontend..."
 
+    check_docker
     check_gcloud_installed
     check_login
     check_project

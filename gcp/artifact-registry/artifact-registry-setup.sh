@@ -89,11 +89,10 @@ create_repositories() {
         gcloud artifacts repositories create $FRONTEND_REPO \
             --repository-format=docker \
             --location=$REGION \
-            --description="Repository for Looply Frontend Docker images"
-        || {
-            log_error "Failed to create repository $FRONTEND_REPO."
-            exit 1
-        }
+            --description="Repository for Looply Frontend Docker images" || {
+                log_error "Failed to create repository $FRONTEND_REPO."
+                exit 1
+            }
         log_success "Repository $FRONTEND_REPO created."
     else
         log_warning "Repository $FRONTEND_REPO already exists."
@@ -104,11 +103,10 @@ create_repositories() {
         gcloud artifacts repositories create $BACKEND_REPO \
             --repository-format=docker \
             --location=$REGION \
-            --description="Repository for Looply Backend Docker images"
-        || {
-            log_error "Failed to create repository $BACKEND_REPO."
-            exit 1
-        }
+            --description="Repository for Looply Backend Docker images" || {
+                log_error "Failed to create repository $BACKEND_REPO."
+                exit 1
+            }
         log_success "Repository $BACKEND_REPO created."
     else
         log_warning "Repository $BACKEND_REPO already exists."
@@ -128,8 +126,7 @@ apply_policies() {
     gcloud artifacts repositories set-cleanup-policies $FRONTEND_REPO \
         --project=$PROJECT_ID \
         --location=$REGION \
-        --policy=$POLICY_FILE \
-        || {
+        --policy=$POLICY_FILE || {
             log_error "Failed to apply policies to repository $FRONTEND_REPO."
             exit 1
         }
@@ -137,8 +134,7 @@ apply_policies() {
     gcloud artifacts repositories set-cleanup-policies $BACKEND_REPO \
         --project=$PROJECT_ID \
         --location=$REGION \
-        --policy=$POLICY_FILE \
-        || {
+        --policy=$POLICY_FILE || {
             log_error "Failed to apply policies to repository $BACKEND_REPO."
             exit 1
         }
@@ -158,7 +154,6 @@ main() {
     enable_artifact_registry
     create_repositories
     apply_policies
-    configure_docker_auth
 
     log_success "GCP Artifact Registry setup complete!"
     echo -e "  ${YELLOW}docker tag IMAGE_NAME $REGION-docker.pkg.dev/$PROJECT_ID/$FRONTEND_REPO/IMAGE_NAME:TAG${NC}"
