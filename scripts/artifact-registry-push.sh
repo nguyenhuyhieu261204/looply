@@ -9,19 +9,15 @@
 # ----------------------
 # Config variables
 # ----------------------
-PROJECT_ID="looply-478609"
-REGION="us-central1"
-BACKEND_REPO="looply-backend"
-BACKEND_IMAGE_NAME="looply-api"
-BACKEND_TAG="latest"
-BACKEND_CONTAINER_NAME="looply-api-container"
-BACKEND_PORT=8000
+PROJECT_ID="${GCP_PROJECTID:-looply-478609}"
+REGION="${GCP_REGION:-us-central1}"
+BACKEND_REPO="${GCP_BACKEND_REPO:-looply-backend}"
+BACKEND_IMAGE_NAME="${GCP_BACKEND_IMAGE_NAME:-looply-api}"
+BACKEND_TAG="${GCP_BACKEND_TAG:-latest}"
 
-FRONTEND_REPO="looply-frontend"
-FRONTEND_IMAGE_NAME="looply-frontend"
-FRONTEND_TAG="latest"
-FRONTEND_CONTAINER_NAME="looply-frontend-container"
-FRONTEND_PORT=3000
+FRONTEND_REPO="${GCP_FRONTEND_REPO:-looply-frontend}"
+FRONTEND_IMAGE_NAME="${GCP_FRONTEND_IMAGE_NAME:-looply-frontend}"
+FRONTEND_TAG="${GCP_FRONTEND_TAG:-latest}"  
 
 FULL_BACKEND_IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$BACKEND_REPO/$BACKEND_IMAGE_NAME"
 FULL_FRONTEND_IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$FRONTEND_REPO/$FRONTEND_IMAGE_NAME"
@@ -43,6 +39,16 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 # ----------------------
 # Functions
 # ----------------------
+
+check_docker() {
+    log_info "Checking if Docker is installed..."
+    if ! command -v docker &> /dev/null; then
+        log_error "Docker is not installed. Install from https://docs.docker.com/get-docker/"
+        exit 1
+    fi
+    log_success "Docker is installed."
+}
+
 check_gcloud_installed() {
     log_info "Checking if gcloud CLI is installed..."
     if ! command -v gcloud &> /dev/null; then
@@ -70,6 +76,22 @@ check_project() {
     log_success "Project $PROJECT_ID exists."
 }
 
+create_repository_if_not_exists() {
+    local repo_name=$1
+    log_info "Checking if Artifact Registry repository '$repo_name' exists..."
+    if gcloud artifacts repositories describe $repo_name --location=$REGION --project=$PROJECT_ID &> /dev/null; then
+        log_success "Repository $repo_name already exists."
+    else
+        log_warning "Repository $repo_name does not exist. Creating..."
+        gcloud artifacts repositories create $repo_name \
+            --repository-format=docker \
+            --location=$REGION \
+            --description="Auto-created by deploy script" \
+            --project=$PROJECT_ID
+        log_success "Repository $repo_name created successfully."
+    fi
+}
+
 ensure_adc_login() {
     log_info "Ensuring Application Default Credentials (ADC) are available..."
     if [ ! -f "$HOME/.config/gcloud/application_default_credentials.json" ]; then
@@ -83,14 +105,16 @@ ensure_adc_login() {
 authenticate_ar() {
     log_info "Configuring standalone Docker credential helper with ADC..."
     
-    # Kiểm tra nếu docker-credential-gcr có sẵn
     if ! command -v docker-credential-gcr &> /dev/null; then
-        log_error "docker-credential-gcr is not installed or not in PATH."
+        log_error "docker-credential-gcr is not installed or not in PATH. Install from https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases"
         exit 1
     fi
+ 
+    docker-credential-gcr configure-docker --registries=$REGION-docker.pkg.dev || {
+        log_error "Failed to configure docker-credential-gcr. Check if ADC is valid."
+        exit 1
+    }
 
-    # Configure helper cho region của Artifact Registry
-    docker-credential-gcr configure-docker --registries=$REGION-docker.pkg.dev
     log_success "Standalone Docker credential helper configured for Artifact Registry using ADC."
 }
 
@@ -117,23 +141,33 @@ grant_artifact_registry_admin() {
     fi
 }
 
-build_backend_image() {
-    log_info "Building backend image..."
-    docker build -t $FULL_BACKEND_IMAGE:$BACKEND_TAG ./server
-    log_success "Backend image built: $FULL_BACKEND_IMAGE:$BACKEND_TAG"
+build_image() {
+    local image_name=$1
+    local tag=$2
+    local path=$3
+
+    log_info "Building image $image_name:$tag from $path..."
+    
+    docker build -t $image_name:$tag $path || {
+        log_error "Failed to build image $image_name:$tag from $path."
+        exit 1
+    }
+    
+    log_success "Image $image_name:$tag built successfully."
 }
 
-build_frontend_image() {
-    log_info "Building frontend image..."
-    docker build -t $FULL_FRONTEND_IMAGE:$FRONTEND_TAG ./client
-    log_success "Frontend image built: $FULL_FRONTEND_IMAGE:$FRONTEND_TAG"
-}
+push_image() {
+    local image_name=$1
+    local tag=$2
 
-push_images() {
-    log_info "Pushing images to Artifact Registry..."
-    docker push $FULL_BACKEND_IMAGE:$BACKEND_TAG
-    docker push $FULL_FRONTEND_IMAGE:$FRONTEND_TAG
-    log_success "All images pushed to Artifact Registry!"
+    log_info "Pushing image $image_name:$tag to Artifact Registry..."
+
+    docker push $image_name:$tag || {
+        log_error "Failed to push image $image_name:$tag to Artifact Registry."
+        exit 1
+    }
+
+    log_success "Image $image_name:$tag pushed successfully."
 }
 
 verify_push() {
@@ -147,22 +181,6 @@ verify_push() {
         exit 1
     fi
     log_success "All images verified in Artifact Registry!"
-}
-
-create_repository_if_not_exists() {
-    local repo_name=$1
-    log_info "Checking if Artifact Registry repository '$repo_name' exists..."
-    if gcloud artifacts repositories describe $repo_name --location=$REGION --project=$PROJECT_ID &> /dev/null; then
-        log_success "Repository $repo_name already exists."
-    else
-        log_warning "Repository $repo_name does not exist. Creating..."
-        gcloud artifacts repositories create $repo_name \
-            --repository-format=docker \
-            --location=$REGION \
-            --description="Auto-created by deploy script" \
-            --project=$PROJECT_ID
-        log_success "Repository $repo_name created successfully."
-    fi
 }
 
 # ----------------------
@@ -179,9 +197,10 @@ main() {
     grant_artifact_registry_admin     
     ensure_adc_login
     authenticate_ar
-    build_backend_image
-    build_frontend_image
-    push_images
+    build_image $FULL_BACKEND_IMAGE $BACKEND_TAG ./server
+    build_image $FULL_FRONTEND_IMAGE $FRONTEND_TAG ./client
+    push_image $FULL_BACKEND_IMAGE $BACKEND_TAG
+    push_image $FULL_FRONTEND_IMAGE $FRONTEND_TAG
     verify_push
 
     log_success "All Docker images built and pushed to Artifact Registry!"

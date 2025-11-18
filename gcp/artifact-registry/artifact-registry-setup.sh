@@ -8,12 +8,12 @@
 # ----------------------
 # Config variables
 # ----------------------
-PROJECT_ID="looply-478609"
-PROJECT_NAME="looply"
-REGION="us-central1"
-FRONTEND_REPO="looply-frontend"
-BACKEND_REPO="looply-backend"
-POLICY_FILE="./gcp/artifact-registry/artifact-registry-cleanup.json"
+PROJECT_ID="${GCP_PROJECTID:-looply-478609}"
+PROJECT_NAME="${GCP_PROJECTNAME:-looply}"
+REGION="${GCP_REGION:-us-central1}"
+FRONTEND_REPO="${GCP_FRONTEND_REPO:-looply-frontend}"
+BACKEND_REPO="${GCP_BACKEND_REPO:-looply-backend}"
+POLICY_FILE="${GCP_POLICY_FILE:-./gcp/artifact-registry/artifact-registry-cleanup.json}"
 
 # ----------------------
 # Color logging
@@ -61,14 +61,24 @@ check_project() {
 
 set_project() {
     log_info "Setting project to $PROJECT_ID..."
-    gcloud config set project $PROJECT_ID
-    log_success "Project set to $PROJECT_ID."
+    
+    if gcloud config set project $PROJECT_ID &> /dev/null; then
+        log_success "Project set to $PROJECT_ID."
+    else
+        log_error "Failed to set project to $PROJECT_ID."
+        exit 1
+    fi
 }
 
 enable_artifact_registry() {
     log_info "Enabling Artifact Registry API..."
-    gcloud services enable artifactregistry.googleapis.com
-    log_success "Artifact Registry API enabled."
+    
+    if gcloud services enable artifactregistry.googleapis.com &> /dev/null; then
+        log_success "Artifact Registry API enabled."
+    else
+        log_error "Failed to enable Artifact Registry API."
+        exit 1
+    fi
 }
 
 create_repositories() {
@@ -80,6 +90,10 @@ create_repositories() {
             --repository-format=docker \
             --location=$REGION \
             --description="Repository for Looply Frontend Docker images"
+        || {
+            log_error "Failed to create repository $FRONTEND_REPO."
+            exit 1
+        }
         log_success "Repository $FRONTEND_REPO created."
     else
         log_warning "Repository $FRONTEND_REPO already exists."
@@ -91,6 +105,10 @@ create_repositories() {
             --repository-format=docker \
             --location=$REGION \
             --description="Repository for Looply Backend Docker images"
+        || {
+            log_error "Failed to create repository $BACKEND_REPO."
+            exit 1
+        }
         log_success "Repository $BACKEND_REPO created."
     else
         log_warning "Repository $BACKEND_REPO already exists."
@@ -101,24 +119,30 @@ create_repositories() {
 
 apply_policies() {
     log_info "Applying policies..."
+
+    if [ ! -f "$POLICY_FILE" ]; then
+        log_error "Policy file $POLICY_FILE does not exist."
+        exit 1
+    fi  
+    
     gcloud artifacts repositories set-cleanup-policies $FRONTEND_REPO \
         --project=$PROJECT_ID \
         --location=$REGION \
-        --policy=$POLICY_FILE
+        --policy=$POLICY_FILE \
+        || {
+            log_error "Failed to apply policies to repository $FRONTEND_REPO."
+            exit 1
+        }
+    
     gcloud artifacts repositories set-cleanup-policies $BACKEND_REPO \
         --project=$PROJECT_ID \
         --location=$REGION \
-        --policy=$POLICY_FILE
+        --policy=$POLICY_FILE \
+        || {
+            log_error "Failed to apply policies to repository $BACKEND_REPO."
+            exit 1
+        }
     log_success "Policies applied."
-}
-
-configure_docker_auth() {
-    if gcloud auth configure-docker $REGION-docker.pkg.dev --quiet; then
-        log_success "Docker authentication configured successfully."
-    else
-        log_error "Failed to configure Docker authentication."
-        exit 1
-    fi
 }
 
 # ----------------------
