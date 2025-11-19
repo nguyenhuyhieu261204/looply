@@ -1,0 +1,41 @@
+import { models } from "#config";
+
+const { User } = models;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const createUserWithUniqueUsername = async (userData) => {
+  const basename = userData.fullName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
+  let attempt = 0;
+  const maxAttempts = 100;
+  const delay = 100;
+
+  while (attempt < maxAttempts) {
+    const suffix = attempt === 0 ? "" : attempt;
+    const candidate = `${basename}${suffix}`;
+
+    try {
+      const user = await User.create({
+        ...userData,
+        username: candidate,
+      });
+      return user;
+    } catch (error) {
+      const code = error?.original?.code || error?.parent?.code;
+
+      if (error.name === "SequelizeUniqueConstraintError" || code === "23505") {
+        attempt++;
+        await sleep(delay);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Failed to create unique username after maximum attempts");
+};

@@ -1,9 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import "#config/database";
+import "#config/redis";
+import "#config/passport";
+
 import http from "http";
 import app from "./app.js";
-import { env } from "#config";
+import { env, closePGConnection, closeRedisConnection } from "#config";
 
 const server = http.createServer(app);
 
@@ -12,7 +16,10 @@ server.listen(env.PORT, () => {
 });
 
 const shutdown = () => {
-  server.close(() => {
+  server.close(async () => {
+    console.log("Closing server...");
+    await closePGConnection();
+    await closeRedisConnection();
     console.log("Server closed");
     process.exit(0);
   });
