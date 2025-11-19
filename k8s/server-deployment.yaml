@@ -15,8 +15,18 @@ spec:
         app: server
         tier: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
         - name: server
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           image: us-central1-docker.pkg.dev/looply-478609/looply-backend/looply-api:latest
           imagePullPolicy: Always
           resources:

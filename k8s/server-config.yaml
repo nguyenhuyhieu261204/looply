@@ -9,5 +9,5 @@ metadata:
 data:
   APP_NAME: looply
   NODE_ENV: development
-  FRONTEND_URL: http://localhost:3000
+  FRONTEND_URL: http://client-service:3000
   PORT: "8000"
