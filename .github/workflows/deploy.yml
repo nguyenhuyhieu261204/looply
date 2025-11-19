@@ -82,12 +82,11 @@ jobs:
         run: |
           kubectl apply -f k8s/ingress.yaml
 
-      - name: "Update deployment images with SHA"
+      - name: "Update deployment images"
         run: |
-          echo "Updating client deployment image..."
-          kubectl set image deployment/client-deployment client=$FRONTEND_IMAGE -n looply
-          echo "Updating server deployment image..."
-          kubectl set image deployment/server-deployment server=$BACKEND_IMAGE -n looply
+          echo "Updating images..."
+          kubectl set image deployment/client-deployment client=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }} -n looply
+          kubectl set image deployment/server-deployment server=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }} -n looply
 
       - name: "Summary"
         run: |
