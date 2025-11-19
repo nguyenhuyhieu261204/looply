@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 import { useLogin } from "./use-login";
 
 export const LoginPage = () => {
-  const { actions, loading } = useLogin();
+  const { actions, isLoading } = useLogin();
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -45,7 +45,7 @@ export const LoginPage = () => {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="flex w-full max-w-[450px] flex-col items-stretch gap-4 px-4 py-3">
           <button
-            disabled={loading}
+            disabled={isLoading}
             onClick={actions.loginWithGoogle}
             className="group flex min-w-[84px] cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-full h-14 px-5 bg-white dark:bg-gray-800 text-[#1F2937] dark:text-white text-base font-bold leading-normal tracking-[0.015em] w-full border border-gray-200 dark:border-gray-700 transition-all hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600"
           >
@@ -75,8 +75,7 @@ export const LoginPage = () => {
             <span className="truncate">Login with Google</span>
           </button>
           <button
-            disabled={loading}
-            onClick={actions.loginWithFacebook}
+            disabled={isLoading}
             className="group flex min-w-[84px] cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-full h-14 px-5 bg-[#1877F2] text-white text-base font-bold leading-normal tracking-[0.015em] w-full transition-all hover:brightness-110 hover:shadow-lg"
           >
             <svg

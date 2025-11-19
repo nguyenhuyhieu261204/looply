@@ -62,9 +62,7 @@ export const loginWithGoogleHandler = asyncHandler(async (req, res, next) => {
         if (!googleProfile) {
           return res
             .status(httpStatus.UNAUTHORIZED)
-            .json(
-              returnError(httpStatus.UNAUTHORIZED, "Google login failed", info)
-            );
+            .json(returnError("Google login failed", httpStatus.UNAUTHORIZED));
         }
 
         // 1️⃣ Tìm hoặc tạo user
