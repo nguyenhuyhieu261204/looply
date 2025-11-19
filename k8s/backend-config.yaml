@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-config
+  namespace: looply
+  labels:
+    app: server-config
+    tier: backend-config
+data:
+  APP_NAME: looply
+  NODE_ENV: development
+  FRONTEND_URL: http://localhost:3000
+  PORT: "8000"

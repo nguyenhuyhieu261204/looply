@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  namespace: looply
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: server
+        tier: backend
+    spec:
+      containers:
+        - name: server
+          image: us-central1-docker.pkg.dev/looply-478609/looply-backend/looply-api:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: server-config
+            - secretRef:
+                name: server-secret
