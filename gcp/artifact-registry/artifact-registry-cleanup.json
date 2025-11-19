@@ -3,8 +3,7 @@
     "name": "delete-untagged-images",
     "action": { "type": "Delete" },
     "condition": {
-      "tagState": "untagged",
-      "olderThan": "30d"
+      "tagState": "untagged"
     }
   }
 ]

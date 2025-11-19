@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server
+  name: server-deployment
   namespace: looply
 spec:
   replicas: 1
