@@ -13,6 +13,8 @@ env:
   GCP_BACKEND_REPO: ${{ secrets.GCP_BACKEND_REPO }}
   GCP_FRONTEND_IMAGE: ${{ secrets.GCP_FRONTEND_IMAGE }}
   GCP_BACKEND_IMAGE: ${{ secrets.GCP_BACKEND_IMAGE }}
+  GCP_GKE_CLUSTER: ${{ secrets.GCP_GKE_CLUSTER }}
+  GCP_GKE_REGION: ${{ secrets.GCP_GKE_REGION }}
 
 jobs:
   build-deploy:
@@ -48,6 +50,35 @@ jobs:
           IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:latest
           docker build -t ${IMAGE_NAME} ./server
           docker push ${IMAGE_NAME}
+
+      - name: "Set up GKE credentials"
+        uses: "google-github-actions/get-gke-credentials@v2"
+        with:
+          cluster_name: ${{ env.GCP_GKE_CLUSTER }}
+          location: ${{ env.GCP_GKE_REGION }}
+
+      - name: "Create namespace"
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
+      - name: "Apply ConfigMaps and Secrets"
+        run: |
+          kubectl apply -f k8s/server-config.yaml
+          kubectl apply -f k8s/server-secret.yaml
+
+      - name: "Apply Deployments"
+        run: |
+          kubectl apply -f k8s/client-deployment.yaml
+          kubectl apply -f k8s/server-deployment.yaml
+
+      - name: "Apply Services"
+        run: |
+          kubectl apply -f k8s/client-service.yaml
+          kubectl apply -f k8s/server-service.yaml
+
+      - name: "Apply Ingress"
+        run: |
+          kubectl apply -f k8s/ingress.yaml
 
       - name: "Summary"
         run: |
