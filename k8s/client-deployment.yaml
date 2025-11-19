@@ -18,10 +18,10 @@ spec:
         app: client
         tier: frontend
     spec:
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 1000
-      fsGroup: 2000
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
         - name: client
           securityContext:
