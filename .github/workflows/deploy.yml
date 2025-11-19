@@ -40,13 +40,13 @@ jobs:
       - name: "Build And Push Frontend Image"
         run: |
           IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:latest
-          docker build -t ${IMAGE_NAME} ./frontend
+          docker build -t ${IMAGE_NAME} ./client
           docker push ${IMAGE_NAME}
 
       - name: "Build And Push Backend Image"
         run: |
           IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:latest
-          docker build -t ${IMAGE_NAME} ./backend
+          docker build -t ${IMAGE_NAME} ./server
           docker push ${IMAGE_NAME}
 
       - name: "Summary"
