@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import httpStatus from "http-status";
 import { env } from "#config";
+import routes from "#routes";
+import { errorHandler, notFoundHandler } from "#controllers/error-controller";
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.use(
   })
 );
 
+app.use(routes);
+
 app.get("/health", (req, res) => {
   return res.status(httpStatus.OK).json({
     status: "healthy",
@@ -28,5 +32,8 @@ app.get("/health", (req, res) => {
     environment: env.NODE_ENV,
   });
 });
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
