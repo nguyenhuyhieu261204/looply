@@ -5,7 +5,10 @@ dotenv.config();
 
 const schema = z.object({
   APP_NAME: z.string().default("looply"),
-  NODE_ENV: z.string().default("development"),
+  NODE_ENV: z
+    .string()
+    .array(["development", "production", "test"])
+    .default("development"),
   PORT: z.string().default("8000"),
   FRONTEND_URL: z.string().url().optional().default("http://localhost:3000"),
 
@@ -18,8 +21,13 @@ const schema = z.object({
 
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
-  ACCESS_TOKEN_EXPIRES_IN: z.number().optional().default(900),
-  REFRESH_TOKEN_EXPIRES_IN: z.number().optional().default(604800),
+  ACCESS_TOKEN_EXPIRES_IN: z.number().int().positive().optional().default(900),
+  REFRESH_TOKEN_EXPIRES_IN: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .default(604800),
 });
 
 const result = schema.safeParse(process.env);

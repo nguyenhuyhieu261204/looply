@@ -2,7 +2,7 @@ import React from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setCredentials } from "./auth-sclice";
+import { setCredentials } from "./auth-slice";
 import { ROUTES } from "@/constants/routes";
 
 export const useLogin = () => {
@@ -22,7 +22,17 @@ export const useLogin = () => {
         setIsLoading(true);
         setError(null);
 
-        const apiOrigin = new URL(import.meta.env.VITE_API_URL).origin;
+        let apiOrigin;
+        try {
+          apiOrigin = new URL(import.meta.env.VITE_API_URL).origin;
+          // eslint-disable-next-line no-unused-vars
+        } catch (error) {
+          const errMessage = "Invalid API URL configuration";
+          setError(errMessage);
+          setIsLoading(false);
+          toast.error(errMessage);
+          return;
+        }
         const popupUrl = `${apiOrigin}/auth/${provider}`;
 
         const popupWindow = window.open(
@@ -51,6 +61,11 @@ export const useLogin = () => {
 
           const eventData = event.data;
 
+          if (!eventData || typeof eventData !== "object" || !eventData.type) {
+            console.warn("⛔ Received malformed message:", eventData);
+            return;
+          }
+
           if (eventData.type === "OAUTH_SUCCESS") {
             dispatch(setCredentials(eventData.payload));
             toast.success("Login successful!");
@@ -67,18 +82,18 @@ export const useLogin = () => {
           }
         };
 
-        const interval = setInterval(() => {
-          if (popupWindow.closed) {
-            cleanup();
-          }
-        }, 500);
-
         const cleanup = () => {
           setIsLoading(false);
           window.removeEventListener("message", messageHandler);
           clearInterval(interval);
           if (!popupWindow.closed) popupWindow.close();
         };
+
+        const interval = setInterval(() => {
+          if (popupWindow.closed) {
+            cleanup();
+          }
+        }, 500);
 
         window.addEventListener("message", messageHandler);
       };

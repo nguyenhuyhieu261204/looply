@@ -41,13 +41,13 @@ jobs:
 
       - name: "Build And Push Frontend Image"
         run: |
-          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:latest
+          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }}
           docker build -t ${IMAGE_NAME} ./client
           docker push ${IMAGE_NAME}
 
       - name: "Build And Push Backend Image"
         run: |
-          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:latest
+          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }}
           docker build -t ${IMAGE_NAME} ./server
           docker push ${IMAGE_NAME}
 
@@ -79,6 +79,11 @@ jobs:
       - name: "Apply Ingress"
         run: |
           kubectl apply -f k8s/ingress.yaml
+
+      - name: "Update deployment images"
+        run: |
+          kubectl set image deployment/client-deployment client-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }}
+          kubectl set image deployment/server-deployment server-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }}
 
       - name: "Summary"
         run: |
