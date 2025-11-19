@@ -82,8 +82,8 @@ jobs:
 
       - name: "Update deployment images"
         run: |
-          kubectl set image deployment/client-deployment client-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }}
-          kubectl set image deployment/server-deployment server-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }}
+          kubectl set image deployment/client-deployment client-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }} -n looply
+          kubectl set image deployment/server-deployment server-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }} -n looply
 
       - name: "Summary"
         run: |
