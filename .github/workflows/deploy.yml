@@ -24,16 +24,16 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: actions/checkout@v4
 
       - name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v2"
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: "Set up Cloud SDK"
-        uses: "google-github-actions/setup-gcloud@v2"
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: "Configure Docker"
         run: |
@@ -41,18 +41,20 @@ jobs:
 
       - name: "Build And Push Frontend Image"
         run: |
-          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }}
-          docker build -t ${IMAGE_NAME} ./client
-          docker push ${IMAGE_NAME}
+          FRONTEND_IMAGE=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }}
+          echo "Frontend image: $FRONTEND_IMAGE"
+          docker build -t $FRONTEND_IMAGE ./client
+          docker push $FRONTEND_IMAGE
 
       - name: "Build And Push Backend Image"
         run: |
-          IMAGE_NAME=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }}
-          docker build -t ${IMAGE_NAME} ./server
-          docker push ${IMAGE_NAME}
+          BACKEND_IMAGE=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }}
+          echo "Backend image: $BACKEND_IMAGE"
+          docker build -t $BACKEND_IMAGE ./server
+          docker push $BACKEND_IMAGE
 
       - name: "Set up GKE credentials"
-        uses: "google-github-actions/get-gke-credentials@v2"
+        uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: ${{ env.GCP_GKE_CLUSTER }}
           location: ${{ env.GCP_GKE_REGION }}
@@ -80,15 +82,17 @@ jobs:
         run: |
           kubectl apply -f k8s/ingress.yaml
 
-      - name: "Update deployment images"
+      - name: "Update deployment images with SHA"
         run: |
-          kubectl set image deployment/client-deployment client-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:${{ github.sha }} -n looply
-          kubectl set image deployment/server-deployment server-container=${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:${{ github.sha }} -n looply
+          echo "Updating client deployment image..."
+          kubectl set image deployment/client-deployment client=$FRONTEND_IMAGE -n looply
+          echo "Updating server deployment image..."
+          kubectl set image deployment/server-deployment server=$BACKEND_IMAGE -n looply
 
       - name: "Summary"
         run: |
           echo "--------------------------------------------------------------------------------------"
-          echo "Frontend Image: ${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_FRONTEND_REPO }}/${{ env.GCP_FRONTEND_IMAGE }}:latest"
-          echo "Backend Image: ${{ env.GCP_GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_BACKEND_REPO }}/${{ env.GCP_BACKEND_IMAGE }}:latest"
+          echo "Frontend Image SHA: $FRONTEND_IMAGE"
+          echo "Backend Image SHA: $BACKEND_IMAGE"
           echo "--------------------------------------------------------------------------------------"
-          echo "🎉Deployment completed successfully!"
+          echo "🎉 Deployment completed successfully!"
