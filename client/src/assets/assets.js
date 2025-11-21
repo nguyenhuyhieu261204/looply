@@ -5,6 +5,7 @@ import bgImage from "./bgImage.png";
 import group_users from "./group_users.png";
 import { Home, MessageCircle, Search, UserIcon, Users } from "lucide-react";
 import sponsored_img from "./sponsored_img.png";
+import { ROUTES } from "@/constants/routes";
 
 export const assets = {
   logo,
@@ -16,8 +17,8 @@ export const assets = {
 };
 
 export const menuItemsData = [
-  { to: "/", label: "Feed", Icon: Home },
-  { to: "/messages", label: "Messages", Icon: MessageCircle },
+  { to: ROUTES.FEED.READ, label: "Feed", Icon: Home },
+  { to: ROUTES.CONVERSATION.LIST, label: "Messages", Icon: MessageCircle },
   { to: "/connections", label: "Connections", Icon: Users },
   { to: "/discover", label: "Discover", Icon: Search },
   { to: "/profile", label: "Profile", Icon: UserIcon },
@@ -43,7 +44,7 @@ export const dummyUserData = {
 
 const dummyUser2Data = {
   ...dummyUserData,
-  _id: "user_2",
+  _id: "user_2zwZSCMRXQ9GaEEVLgm6akQo96i",
   username: "Richard Hendricks",
   full_name: "Richard Hendricks",
   profile_picture:
@@ -58,6 +59,8 @@ const dummyUser3Data = {
   profile_picture:
     "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&h=200&auto=format&fit=crop",
 };
+
+export const dummyUsersData = [dummyUserData, dummyUser2Data, dummyUser3Data];
 
 export const dummyStoriesData = [
   {
@@ -241,7 +244,6 @@ export const dummyMessagesData = [
     _id: "6878cc3217a54e4d37480122",
     from_user_id: "user_2zwZSCMRXQ9GaEEVLgm6akQo96i",
     to_user_id: "user_2zdFoZib5lNr614LgkONdD8WG32",
-    text: "",
     message_type: "image",
     media_url:
       "https://images.pexels.com/photos/106341/pexels-photo-106341.jpeg",
@@ -295,3 +297,14 @@ export const dummyFollowersData = [dummyUser2Data, dummyUser3Data];
 export const dummyFollowingData = [dummyUser2Data, dummyUser3Data];
 
 export const dummyPendingConnectionsData = [dummyUserData];
+
+export const dummyConversationsData = [
+  {
+    _id: 'conv_1',
+    messages: [dummyMessagesData[0], dummyMessagesData[1], dummyMessagesData[2], dummyMessagesData[3]],
+  },
+  {
+    _id: 'conv_2',
+    messages: [dummyMessagesData[0], dummyMessagesData[1], dummyMessagesData[2], dummyMessagesData[3]],
+  },
+];
