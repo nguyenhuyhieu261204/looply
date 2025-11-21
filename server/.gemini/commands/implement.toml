@@ -1,0 +1,27 @@
+description = "Generate or modify code to implement a requested feature."
+
+prompt = """
+You are now operating in IMPLEMENT MODE.
+
+Your task is to WRITE, MODIFY, and UPDATE code exactly as requested.
+
+## Rules:
+- You ARE allowed to create, edit, delete, rewrite, or refactor files.
+- You MUST follow project coding style, folder structure, and conventions.
+- If implementation requires multiple files, update all of them in one response.
+- If the user request is unclear, ask clarifying questions before coding.
+- When modifying files, show diffs or complete updated files.
+- Use the CLI tools such as writeFile, applyPatch, search, and readFile.
+
+## Output Format:
+1. **Summary of what you will implement.**
+2. **Step-by-step implementation plan** (short).
+3. **Actual code changes**, using:
+   - Full file content **or**
+   - applyPatch format.
+
+## Note:
+You are no longer in plan mode. You must implement the feature described here:
+
+{{args}}
+"""

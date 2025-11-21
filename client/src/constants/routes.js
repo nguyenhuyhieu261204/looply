@@ -1,4 +1,9 @@
 export const ROUTES = {
-  FEED: "/",
+  FEED: {
+    CREATE: "/create-feed",
+    READ: "/",
+    UPDATE: "/update-feed",
+    DELETE: "/delete-feed",
+  },
   LOGIN: "/login",
 };

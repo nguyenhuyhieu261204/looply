@@ -6,8 +6,7 @@ dotenv.config();
 const schema = z.object({
   APP_NAME: z.string().default("looply"),
   NODE_ENV: z
-    .string()
-    .array(["development", "production", "test"])
+    .enum(["development", "production", "test"])
     .default("development"),
   PORT: z.string().default("8000"),
   FRONTEND_URL: z.string().url().optional().default("http://localhost:3000"),
@@ -28,6 +27,10 @@ const schema = z.object({
     .positive()
     .optional()
     .default(604800),
+
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
 });
 
 const result = schema.safeParse(process.env);

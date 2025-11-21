@@ -1,4 +1,8 @@
-import { asyncHandler, returnError } from "#utils";
+import {
+  generateAccessToken,
+  verifyRefreshToken,
+} from "#services/token-service";
+import { asyncHandler, returnError, returnSuccess } from "#utils";
 import passport from "passport";
 import httpStatus from "http-status";
 import { env, models } from "#config";
@@ -8,90 +12,30 @@ import { setRefreshTokenCookie } from "#utils/cookie";
 
 const { User } = models;
 
-/**
- * Tạo hoặc cập nhật user từ google profile
- * - Nếu user tồn tại → cập nhật thông tin và lastActive
- * - Nếu chưa tồn tại → tạo mới user với username unique
- */
-async function findOrCreateUserFromGoogle(googleProfile) {
-  let user = await User.findOne({ where: { googleId: googleProfile.id } });
-
-  const userData = {
-    email: googleProfile.emails[0].value,
-    fullName: googleProfile.displayName,
-    googleId: googleProfile.id,
-    profilePicture: googleProfile.photos[0].value,
-    lastActive: new Date(),
-  };
-
-  if (!user) {
-    // Tạo mới user, xử lý race condition trong service
-    user = await createUserWithUniqueUsername(userData);
-  } else {
-    // Cập nhật thông tin nếu có thay đổi
-    let updated = false;
-    for (const key of ["email", "fullName", "profilePicture"]) {
-      if (user[key] !== userData[key]) {
-        user[key] = userData[key];
-        updated = true;
-      }
-    }
-    if (updated || !user.lastActive) {
-      user.lastActive = new Date();
-      await user.save();
-    }
-  }
-
-  return user;
-}
-
-/**
- * Login with Google handler
- */
 export const loginWithGoogleHandler = asyncHandler(async (req, res, next) => {
-  passport.authenticate(
-    "google",
-    { session: false },
-    async (err, googleProfile, info) => {
-      try {
-        if (err) {
-          console.error("Passport error:", err);
-          return next(err);
-        }
+  try {
+    let user = req.user;
 
-        if (!googleProfile) {
-          return res
-            .status(httpStatus.UNAUTHORIZED)
-            .json(returnError("Google login failed", httpStatus.UNAUTHORIZED));
-        }
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user);
 
-        // 1️⃣ Tìm hoặc tạo user
-        let user = await findOrCreateUserFromGoogle(googleProfile);
+    setRefreshTokenCookie(res, refreshToken);
 
-        // 2️⃣ Tạo access token & refresh token
-        const { accessToken, refreshToken } =
-          await generateAccessTokenAndRefreshToken(user);
+    user = user.toJSON();
+    delete user.googleId;
 
-        // 3️⃣ Lưu refresh token vào cookie
-        setRefreshTokenCookie(res, refreshToken);
+    const oauthResult = {
+      type: "OAUTH_SUCCESS",
+      payload: {
+        user,
+        accessToken,
+      },
+    };
 
-        // 4️⃣ Chuẩn hóa dữ liệu user trả về
-        user = user.toJSON();
-        delete user.googleId;
+    const safeJson = JSON.stringify(oauthResult).replace(/</g, "\\u003c");
 
-        const oauthResult = {
-          type: "OAUTH_SUCCESS",
-          payload: {
-            user,
-            accessToken,
-          },
-        };
-
-        // 5️⃣ Gửi postMessage về frontend (popup) an toàn
-        const safeJson = JSON.stringify(oauthResult).replace(/</g, "\\u003c");
-
-        res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
-        res.send(`
+    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+    res.send(`
         <!DOCTYPE html>
         <html>
         <head><title>Authentication Complete</title></head>
@@ -111,19 +55,19 @@ export const loginWithGoogleHandler = asyncHandler(async (req, res, next) => {
         </body>
         </html>
       `);
-      } catch (error) {
-        console.error("Error in loginWithGoogleHandler:", error);
+  } catch (error) {
+    console.error("Error in loginWithGoogleHandler:", error);
 
-        const errorResult = {
-          type: "OAUTH_FAILED",
-          payload: {
-            message: "Google login failed",
-            error: error.message || error,
-          },
-        };
-        const safeJson = JSON.stringify(errorResult).replace(/</g, "\\u003c");
+    const errorResult = {
+      type: "OAUTH_FAILED",
+      payload: {
+        message: "Google login failed",
+        error: error.message || error,
+      },
+    };
+    const safeJson = JSON.stringify(errorResult).replace(/</g, "\\u003c");
 
-        res.send(`
+    res.send(`
         <!DOCTYPE html>
         <html>
         <head><title>Authentication Failed</title></head>
@@ -143,7 +87,64 @@ export const loginWithGoogleHandler = asyncHandler(async (req, res, next) => {
         </body>
         </html>
       `);
-      }
-    }
-  )(req, res, next);
+  }
+});
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    return res
+      .status(httpStatus.UNAUTHORIZED)
+      .json(
+        returnError(
+          "Refresh token not found. Please log in again.",
+          httpStatus.UNAUTHORIZED
+        )
+      );
+  }
+
+  let decoded;
+  try {
+    decoded = await verifyRefreshToken(refreshToken);
+  } catch (error) {
+    return res
+      .status(httpStatus.FORBIDDEN)
+      .json(
+        returnError(
+          "Invalid or expired refresh token. Please log in again.",
+          httpStatus.FORBIDDEN
+        )
+      );
+  }
+
+  const user = await User.findByPk(decoded.userId);
+
+  if (!user) {
+    return res
+      .status(httpStatus.UNAUTHORIZED)
+      .json(
+        returnError(
+          "User not found with provided refresh token.",
+          httpStatus.UNAUTHORIZED
+        )
+      );
+  }
+
+  const newAccessToken = generateAccessToken(user);
+
+  return res.status(httpStatus.OK).json(
+    returnSuccess("Access token refreshed successfully.", {
+      accessToken: newAccessToken,
+      user,
+    })
+  );
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  return res
+    .status(httpStatus.OK)
+    .json(
+      returnSuccess("Current user fetched successfully.", { user: req.user })
+    );
 });

@@ -70,7 +70,7 @@ export const useLogin = () => {
             dispatch(setCredentials(eventData.payload));
             toast.success("Login successful!");
             cleanup();
-            navigate(ROUTES.FEED);
+            navigate(ROUTES.FEED.READ);
             return;
           }
 

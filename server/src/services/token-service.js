@@ -62,10 +62,8 @@ export const revokeRefreshToken = async (refreshToken) => {
 };
 
 export const generateAccessTokenAndRefreshToken = async (user) => {
-  const payload = { userId: user.id };
-
-  const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken(payload);
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
 
   await saveRefreshToken(refreshToken, user.id);
 

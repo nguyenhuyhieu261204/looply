@@ -5,6 +5,7 @@ import bgImage from "./bgImage.png";
 import group_users from "./group_users.png";
 import { Home, MessageCircle, Search, UserIcon, Users } from "lucide-react";
 import sponsored_img from "./sponsored_img.png";
+import { ROUTES } from "@/constants/routes";
 
 export const assets = {
   logo,
@@ -16,7 +17,7 @@ export const assets = {
 };
 
 export const menuItemsData = [
-  { to: "/", label: "Feed", Icon: Home },
+  { to: ROUTES.FEED.READ, label: "Feed", Icon: Home },
   { to: "/messages", label: "Messages", Icon: MessageCircle },
   { to: "/connections", label: "Connections", Icon: Users },
   { to: "/discover", label: "Discover", Icon: Search },
