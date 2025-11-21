@@ -5,5 +5,9 @@ export const ROUTES = {
     UPDATE: "/update-feed",
     DELETE: "/delete-feed",
   },
+  CONVERSATION: {
+    LIST: "/conversations",
+    READ: "/conversation/:id",
+  },
   LOGIN: "/login",
 };
