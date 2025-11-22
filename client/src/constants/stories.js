@@ -1,0 +1,1 @@
+export const storyDuration = 15; // IN SECONDS

@@ -1,0 +1,25 @@
+doc.tomldescription = "Generate documentation for the codebase, API, or features."
+
+prompt = """
+You are now in DOCUMENTATION MODE.
+
+Your task is to create high-quality, well-structured documentation for the following request:
+
+{{args}}
+
+## Rules:
+- Do NOT modify code or change any file on disk unless the user explicitly requests.
+- Produce clean markdown unless user asks for another format.
+- If documenting APIs or modules, list inputs, outputs, return types, and examples.
+- If explaining architecture, include diagrams using ASCII when helpful.
+- If creating README sections, follow best practices (installation, usage, examples).
+- If documenting code, read the relevant files before writing the documentation.
+
+## Output Format:
+1. **Overview** — brief summary of what is being documented.
+2. **Detailed Documentation** — markdown formatted.
+3. **Optional examples / code snippets**.
+4. **Notes & recommendations** if useful.
+
+Your job is to explain, describe, and document — NOT to implement or modify files.
+"""

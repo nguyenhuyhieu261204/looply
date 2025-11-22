@@ -39,3 +39,33 @@ export const createUserWithUniqueUsername = async (userData) => {
 
   throw new Error("Failed to create unique username after maximum attempts");
 };
+
+export const findOrCreateUserFromGoogle = async (googleProfile) => {
+  let user = await User.findOne({ where: { googleId: googleProfile.id } });
+
+  const userData = {
+    email: googleProfile.emails[0].value,
+    fullName: googleProfile.displayName,
+    googleId: googleProfile.id,
+    profilePicture: googleProfile.photos[0].value,
+    lastActive: new Date(),
+  };
+
+  if (!user) {
+    user = await createUserWithUniqueUsername(userData);
+  } else {
+    let updated = false;
+    for (const key of ["email", "fullName", "profilePicture"]) {
+      if (user[key] !== userData[key]) {
+        user[key] = userData[key];
+        updated = true;
+      }
+    }
+    if (updated || !user.lastActive) {
+      user.lastActive = new Date();
+      await user.save();
+    }
+  }
+
+  return user;
+};

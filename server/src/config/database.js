@@ -1,6 +1,6 @@
 import { DataTypes, Sequelize } from "sequelize";
 import { env } from "./environment.js";
-import { UserFN } from "#models";
+import { UserFN, FeedFN, FeedMediaFN, MediaPendingFN } from "#models";
 
 const dbConfigs = {
   development: {
@@ -31,6 +31,9 @@ const sequelize = new Sequelize(dbConfigs[env.NODE_ENV].url, {
 
 const modelFns = {
   User: UserFN,
+  Feed: FeedFN,
+  FeedMedia: FeedMediaFN,
+  MediaPending: MediaPendingFN,
 };
 
 const models = {};

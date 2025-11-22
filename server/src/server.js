@@ -4,6 +4,7 @@ dotenv.config();
 import "#config/database";
 import "#config/redis";
 import "#config/passport";
+import "#config/cloudinary";
 
 import http from "http";
 import app from "./app.js";
