@@ -9,5 +9,8 @@ export const ROUTES = {
     LIST: "/conversations",
     READ: "/conversation/:id",
   },
+    PROFILE: {
+      READ: "/profile",
+    },
   LOGIN: "/login",
 };

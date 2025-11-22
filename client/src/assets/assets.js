@@ -21,7 +21,7 @@ export const menuItemsData = [
   { to: ROUTES.CONVERSATION.LIST, label: "Messages", Icon: MessageCircle },
   { to: "/connections", label: "Connections", Icon: Users },
   { to: "/discover", label: "Discover", Icon: Search },
-  { to: "/profile", label: "Profile", Icon: UserIcon },
+  { to: ROUTES.PROFILE.READ, label: "Profile", Icon: UserIcon },
 ];
 
 export const dummyUserData = {

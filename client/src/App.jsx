@@ -8,6 +8,7 @@ import { CreateFeedPage } from "./features/feed/pages/create-feed-page";
 import PrivateRoute from "./components/private-route";
 import { ConversationPage } from "./features/message/pages/conversation-page";
 import { ConversationsPage } from "./features/message/pages/conversations-page";
+import {Profile} from "@features/profile/pages/profile.jsx";
 
 const App = () => {
   return (
@@ -23,6 +24,9 @@ const App = () => {
             {/* CONVERSATION */}
             <Route path={ROUTES.CONVERSATION.LIST} element={<ConversationsPage />} />
             <Route path={ROUTES.CONVERSATION.READ} element={<ConversationPage />} />
+
+          {/* PROFILE*/}
+              <Route path={ROUTES.PROFILE.READ} element={<Profile />} />
 
           </Route>
         </Route>
